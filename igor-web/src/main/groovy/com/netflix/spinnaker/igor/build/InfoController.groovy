@@ -42,6 +42,8 @@ import javax.servlet.http.HttpServletRequest
 @Slf4j
 class InfoController {
 
+    private final static String DEPRECATION_NOTICE_MESSAGE = "Invocation of deprecated endpoint"
+
     @Autowired
     BuildCache buildCache
 
@@ -85,7 +87,7 @@ class InfoController {
             }
         }
     }
-    
+
     void addMaster(masterList, providerType, properties, expctedType) {
         if (!providerType || providerType == expctedType) {
             masterList.addAll(
@@ -137,6 +139,7 @@ class InfoController {
 
     @RequestMapping(value = '/jobs/{master:.+}/**')
     Object getJobConfig(@PathVariable String master, HttpServletRequest request) {
+        log.debug(DEPRECATION_NOTICE_MESSAGE)
         def job = (String) request.getAttribute(
             HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).split('/').drop(3).join('/')
         def service = buildMasters.map[master]
@@ -145,4 +148,16 @@ class InfoController {
         }
         return service.getJobConfig(job)
     }
+
+    @RequestMapping(value = '/v3/jobs/{master:.+}')
+    Object v3GetJobConfig(@PathVariable String master,
+                        HttpServletRequest request,
+                        @RequestParam(value = "job", required = true) String job) {
+        def service = buildMasters.map[master]
+        if (!service) {
+            throw new NotFoundException("Master '${master}' does not exist")
+        }
+        return service.v3GetJobConfig(job)
+    }
+
 }
