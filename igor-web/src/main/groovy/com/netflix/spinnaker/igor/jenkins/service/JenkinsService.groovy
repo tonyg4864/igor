@@ -34,7 +34,7 @@ import com.netflix.spinnaker.kork.core.RetrySupport
 import groovy.util.logging.Slf4j
 import org.springframework.web.util.UriUtils
 import retrofit.client.Response
-
+import java.nio.charset.StandardCharsets
 
 import static net.logstash.logback.argument.StructuredArguments.kv
 
@@ -198,5 +198,12 @@ class JenkinsService implements BuildService{
         ScmDetails scmDetails = getGitDetails(job, buildNumber)
         return scmDetails.genericGitRevisions()
 
+    }
+
+    JobConfig v3GetJobConfig(String jobName) {
+        return jenkinsClient.getJobConfig(v3Encode(jobName))
+    }
+    private String v3Encode(uri) {
+        return UriUtils.encodeFragment(UriUtils.decode(uri, StandardCharsets.UTF_8.name()), StandardCharsets.UTF_8.name())
     }
 }
